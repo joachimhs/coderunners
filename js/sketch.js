@@ -1,5 +1,5 @@
 var columns = 20,
-    rows    = 15;
+    rows    = 10;
 
 var tileWidth = 50;
 var tileHeight = tileWidth;
@@ -132,7 +132,7 @@ function allRunnersDead() {
 function startRound() {
     setTimeout(function() {
         running = true;
-    }, 340);
+    }, 100);
 
     for (var r = 0; r < numRunnersThisRound; r++) {
         setTimeout(function() {
@@ -174,7 +174,7 @@ function isAnyTowerAt(tileX, tileY) {
     return towerAlreadyPlaced;
 }
 
-function mouseClicked() {
+function doMouseClickOrTouch() {
     var tileX = getTileX(mouseX);
     var tileY = getTileY(mouseY);
 
@@ -205,8 +205,17 @@ function mouseClicked() {
         console.log("starting round");
         startRound();
     }
-
 }
+
+function touchEnded() {
+    console.log('touchEnded');
+    doMouseClickOrTouch()
+}
+
+/*function mouseClicked() {
+    console.log('mouseClicked');
+    doMouseClickOrTouch()
+}*/
 
 //UTILITY
 
