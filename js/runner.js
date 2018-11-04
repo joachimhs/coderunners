@@ -43,52 +43,31 @@ function Runner(health) {
         var tileX = getTileX(this.position.x);
         var tileY = getTileY(this.position.y);
 
-        if (this.direction === "E") {
-            if (isAnyTowerAt(tileX+1, tileY)) {
-                console.log("BLOCKING TOWER!");
-                this.direction = "N";
-            } else {
-                this.position.x += this.speed;
-            }
-        } else if (this.direction === "N") {
-            if (isAnyTowerAt(tileX, tileY-1)) {
-                console.log("BLOCKING TOWER!");
-                this.direction = "W";
-            } else {
-                this.position.y -= this.speed;
-            }
-        } else if (this.direction === "W") {
-            if (isAnyTowerAt(tileX-1, tileY)) {
-                console.log("BLOCKING TOWER!");
-                this.direction = "S";
-            } else {
-                this.position.x -= this.speed;
-            }
-        }
+        var floor = findTileAt(tileX, tileY);
 
-        this.checkIfEastIsClear(tileX, tileY);
-        if (this.direction === "W") {
-            this.checkIfNorthIsClear(tileX, tileY);
-        }
-    };
+        var eastD = distanceTo(floor.getTileX() + 1, floor.getTileY());
+        var northD = distanceTo(floor.getTileX(), floor.getTileY() - 1);
+        var southD = distanceTo(floor.getTileX(), floor.getTileY() + 1);
+        var westD = distanceTo(floor.getTileX() - 1, floor.getTileY());
 
-    this.checkIfEastIsClear = function(tileX, tileY) {
-        var eastClear = true;
-        for (var xPos = tileX; xPos < columns; xPos++) {
+        var east = findTileAt(floor.getTileX() + 1, floor.getTileY());
+        var north = findTileAt(floor.getTileX(), floor.getTileY() - 1);
+        var south = findTileAt(floor.getTileX(), floor.getTileY() + 1);
+        var west = findTileAt(floor.getTileX() - 1, floor.getTileY());
 
-            if (isAnyTowerAt(xPos, tileY)) {
-                eastClear = false;
-            }
-        }
+        if (west && westD <= southD && westD <= eastD && westD <= northD) {
+            this.direction = "W";
+            this.position.x -= this.speed;
 
-        if (eastClear) {
+        } else if (eastD <= northD && eastD <= southD && eastD <= westD) {
             this.direction = "E";
+            this.position.x += this.speed;
+        } else if (northD <= eastD && northD <= southD ) {
+            this.direction = "N";
+            this.position.y -= this.speed;
+        } else if (southD <= northD && southD <= eastD) {
+            this.direction = "S";
+            this.position.y += this.speed;
         }
     };
-
-    this.checkIfNorthIsClear = function(tileX, tileY) {
-       if (!isAnyTowerAt(tileX, tileY-1)) {
-           this.direction = "N";
-       }
-    }
 }
