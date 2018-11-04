@@ -232,6 +232,7 @@ function drawTowers() {
 
     if (findTileAt(0,5).getDistance() === 10000) {
         towers.pop();
+        availableTowers++;
     }
 
     for (var t = 0; t < towers.length; t++) {
