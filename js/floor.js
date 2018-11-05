@@ -56,6 +56,10 @@ function Floor(tileX, tileY) {
         return tileY;
     };
 
+    this.getCenter = function() {
+        return createVector((tileX*tileWidth) + tileWidth/2, (tileY*tileHeight) + tileHeight/2);
+    };
+
     this.draw = function() {
         fill(this.color);
         stroke(0);

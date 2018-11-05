@@ -3,6 +3,13 @@ function Runner(health) {
     this.speed = 3;
     this.direction = "E";
     this.health = health;
+    this.steps = 0;
+    this.nextTile = null;
+
+    this.east = null;
+    this.west = null;
+    this.north = null;
+    this.south = null;
 
     this.getTileX = function() {
         return getTileX(this.position.x);
@@ -40,34 +47,68 @@ function Runner(health) {
     };
 
     this.update = function() {
-        var tileX = getTileX(this.position.x);
-        var tileY = getTileY(this.position.y);
+        if (!this.nextTile) {
+            var tileX = getTileX(this.position.x - (tileWidth / 2));
+            var tileY = getTileY(this.position.y - (tileHeight / 2));
 
-        var floor = findTileAt(tileX, tileY);
+            if (this.direction === "W") {
+                tileX = getTileX(this.position.x + (tileWidth / 2));
+            }
 
-        var eastD = distanceTo(floor.getTileX() + 1, floor.getTileY());
-        var northD = distanceTo(floor.getTileX(), floor.getTileY() - 1);
-        var southD = distanceTo(floor.getTileX(), floor.getTileY() + 1);
-        var westD = distanceTo(floor.getTileX() - 1, floor.getTileY());
+            if (this.direction === "N") {
+                tileY = getTileY(this.position.y + (tileHeight / 2));
+            }
 
-        var east = findTileAt(floor.getTileX() + 1, floor.getTileY());
-        var north = findTileAt(floor.getTileX(), floor.getTileY() - 1);
-        var south = findTileAt(floor.getTileX(), floor.getTileY() + 1);
-        var west = findTileAt(floor.getTileX() - 1, floor.getTileY());
+            var floor = findTileAt(tileX, tileY);
 
-        if (west && westD <= southD && westD <= eastD && westD <= northD) {
-            this.direction = "W";
-            this.position.x -= this.speed;
+            var eastD = distanceTo(floor.getTileX() + 1, floor.getTileY());
+            var northD = distanceTo(floor.getTileX(), floor.getTileY() - 1);
+            var southD = distanceTo(floor.getTileX(), floor.getTileY() + 1);
+            var westD = distanceTo(floor.getTileX() - 1, floor.getTileY());
 
-        } else if (eastD <= northD && eastD <= southD && eastD <= westD) {
-            this.direction = "E";
-            this.position.x += this.speed;
-        } else if (northD <= eastD && northD <= southD ) {
-            this.direction = "N";
-            this.position.y -= this.speed;
-        } else if (southD <= northD && southD <= eastD) {
-            this.direction = "S";
-            this.position.y += this.speed;
+            this.east = findTileAt(floor.getTileX() + 1, floor.getTileY());
+            this.north = findTileAt(floor.getTileX(), floor.getTileY() - 1);
+            this.south = findTileAt(floor.getTileX(), floor.getTileY() + 1);
+            this.west = findTileAt(floor.getTileX() - 1, floor.getTileY());
+
+            if (this.west && westD <= southD && westD <= eastD && westD <= northD) {
+                this.steps = parseInt(tileWidth / 4);
+                this.nextTile = this.west;
+            } else if (eastD <= northD && eastD <= southD && eastD <= westD) {
+                this.steps = parseInt(tileWidth / 4);
+                this.nextTile = this.east;
+            } else if (northD <= eastD && northD <= southD) {
+                this.nextTile = this.north;
+                this.steps = parseInt(tileWidth / 4);
+            } else if (southD <= northD && southD <= eastD) {
+                this.steps = parseInt(tileWidth / 4);
+                this.nextTile = this.south;
+            }
         }
+
+        if (this.nextTile === this.west) {
+            this.position.x -= this.speed;
+            if (abs(this.nextTile.getCenter().x - this.position.x) < 3) {
+                this.nextTile = null;
+            }
+        } else if (this.nextTile === this.east) {
+            this.position.x += this.speed;
+            if (abs(this.nextTile.getCenter().x - this.position.x) < 3) {
+                this.nextTile = null;
+            }
+        } else if (this.nextTile === this.north) {
+            this.position.y -= this.speed;
+            if (abs(this.nextTile.getCenter().y - this.position.y) < 3) {
+                this.nextTile = null;
+            }
+        } else if (this.nextTile === this.south) {
+            this.position.y += this.speed;
+            if (abs(this.nextTile.getCenter().y - this.position.y) < 3) {
+                this.nextTile = null;
+            }
+        }
+
+
+        this.steps--;
     };
 }

@@ -11,7 +11,7 @@ var towers = [];
 var runners = [];
 var tiles = [];
 
-var availableTowers = 2; //The number of towers that can be currently placed
+var availableTowers = 3; //The number of towers that can be currently placed
 var placeTower = false; //true = in place tower-mode
 var running = false; //true = round is running
 
@@ -20,6 +20,7 @@ var roundNum = 1;
 
 function setup() {
     createCanvas(gameWidth+200, gameHeight);
+    angleMode(DEGREES);
 }
 
 function draw() {
@@ -162,7 +163,7 @@ function getNumVisited() {
 
 function distanceTo(tileX, tileY) {
     var tile = findTileAt(tileX, tileY);
-    if (tile !== undefined  ) {
+    if (tile) {
         return tile.getDistance();
     } else {
         return 10000;
@@ -228,8 +229,6 @@ function drawStartButton() {
 }
 
 function drawTowers() {
-    //Check if path is impossible
-
     if (findTileAt(0,5).getDistance() === 10000) {
         towers.pop();
         availableTowers++;
@@ -271,8 +270,10 @@ function drawRunners() {
 }
 
 function runnerReachedGoal() {
+
     for (var r = 0; r < runners.length; r++) {
-        if (runners[r].getTileX() > columns-1) {
+        var tile = findTileAt(runners[r].getTileX(), runners[r].getTileY());
+        if (tile.getDistance() === 0) {
             return true;
         }
     }
@@ -359,7 +360,8 @@ function doMouseClickOrTouch() {
     }
 
     if (mouseX > gameWidth + 50 && mouseX < gameWidth+200
-        && mouseY > gameHeight - 100 && mouseY < gameHeight) {
+        && mouseY > gameHeight - 100 && mouseY < gameHeight
+        && !running) {
 
         console.log("starting round");
         startRound();
