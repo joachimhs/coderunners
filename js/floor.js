@@ -1,9 +1,22 @@
 function Floor(tileX, tileY) {
-    this.color = 100;
+    this.color = kikoraP5.color(24, 44, 79);
     this.distance = 10000;
     this.walkable = true;
     this.visited = false;
     this.travelTo = "E";
+    this.tileSprite = null;
+
+    this.getTileSprite = function() {
+        return this.tileSprite;
+    };
+
+    this.getColor = function() {
+        return this.color;
+    };
+
+    this.setColor = function(newColor) {
+        this.color = newColor;
+    };
 
     this.setTravelTo = function(direction) {
         this.travelTo = direction;
@@ -15,15 +28,20 @@ function Floor(tileX, tileY) {
 
     this.setVisited = function(vis) {
         this.visited = vis;
+        this.color = spillet.getGreenColor();
     };
 
     this.getVisited = function() {
         return this.visited;
     };
 
+    this.setTileSprite = function(img) {
+        this.tileSprite = img;
+    };
+
     this.setWalkable = function(walk) {
         if (!walk) {
-            this.color = 255;
+            this.color = 50;
         }
         this.walkable = walk;
     };
@@ -40,12 +58,16 @@ function Floor(tileX, tileY) {
         return this.distance;
     };
 
-    this.setPath = function() {
-        this.color = 130;
+    this.setPlayer = function() {
+        this.color = kikoraP5.color(140, 217, 92);
+    };
+
+    this.setGoal = function() {
+        this.color = kikoraP5.color(106, 76, 181);
     };
 
     this.setAvailable = function() {
-        this.color = 100;
+        this.color = kikoraP5.color(24, 44, 79);
     };
 
     this.getTileX = function() {
@@ -60,13 +82,29 @@ function Floor(tileX, tileY) {
         return createVector((tileX*tileWidth) + tileWidth/2, (tileY*tileHeight) + tileHeight/2);
     };
 
-    this.draw = function() {
-        fill(this.color);
-        stroke(0);
-        rect((tileX*tileWidth)+2, (tileY*tileHeight)+2, tileWidth-2, tileHeight-2);
+    this.resetTile = function() {
+        this.setAvailable();
+        this.setTileSprite(null);
+    };
 
-        fill(0);
-        textSize(12);
-        text('' + this.distance, (tileX*tileWidth)+tileWidth/2, (tileY*tileHeight)+tileWidth/2);
+    this.playerCanBeAtTile = function() {
+        let playerCanBeHere = true;
+
+        if (this.tileSprite === spillet.stoneImg) {
+            playerCanBeHere = false;
+        }
+
+        return playerCanBeHere;
+    };
+
+    this.draw = function() {
+        kikoraP5.fill(this.color);
+        kikoraP5.stroke(0);
+        kikoraP5.rect((tileX*spillet.tileWidth)+2, (tileY*spillet.tileHeight)+2, spillet.tileWidth-2, spillet.tileHeight-2);
+
+        if (this.tileSprite) {
+
+            kikoraP5.image(this.tileSprite, (tileX*spillet.tileWidth)+2, (tileY*spillet.tileHeight)+2, spillet.tileWidth-2, spillet.tileHeight-2);
+        }
     }
 }

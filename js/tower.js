@@ -1,6 +1,11 @@
 function Tower(column, row) {
     this.xPos = 0;
     this.yPos = 0;
+    this.damage = 1;
+
+    this.getDamage = function() {
+        return this.damage;
+    };
 
     this.draw = function() {
         this.xPos = (column*tileWidth) + (tileWidth/2);

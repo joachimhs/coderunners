@@ -1,12 +1,146 @@
 <html>
 <head>
+    <meta charset="UTF-8">
+
+    <script src="js/acorn_interpreter.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
-    <script src="js/p5.play.js"></script>
-    <script src="js/sketch.js"></script>
-    <script src="js/floor.js"></script>
-    <script src="js/tower.js"></script>
-    <script src="js/runner.js"></script>
+    <script src="js/blockly_compressed.js"></script>
+    <script src="js/javascript_compressed.js"></script>
+    <script src="js/blocks_compressed.js"></script>
+    <script src="js/blockly_custom.js"></script>
+    <script src="js/nb.js"></script>
+
+
+    <style type="text/css">
+        #sketch-holder {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .text {
+            position: absolute;
+            top: 600px;
+            left: 0;
+        }
+
+        #blocklyDiv {
+            position: absolute;
+            top: 10px;
+            left: 730px;
+            height: 500px;
+            width: 700px;
+        }
+
+        #buttonBar button {
+            position: absolute;
+            left: 521px;
+            top: 460px;
+            width: 200px;
+            height: 50px;
+            background: #8cd95c;
+            color: #fff;
+            font-weight: 500;
+            font-size: 17pt;
+            border: 1px solid #408217;
+            border-radius: 15px;
+            outline: none;
+        }
+
+        #description {
+            position: absolute;
+            left: 520px;
+            width: 159px;
+            font-family: sans-serif;
+            font-size: 14pt;
+            background: #eee;
+            height: 402px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        #configArea {
+            position: absolute;
+            top: 550px;
+            width: 500px;
+            height: 200px;
+        }
+
+        #configInput {
+            width: 500px;
+            height: 200px;
+        }
+
+        #configAreaButton {
+            position: absolute;
+            top: 700px;
+            left: 520px;
+            width: 200px;
+            height: 50px;
+            background: #8cd95c;
+            color: #fff;
+            font-weight: 500;
+            font-size: 17pt;
+            border: 1px solid #408217;
+            border-radius: 15px;
+            outline: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
+    
+<div id="sketch-holder">
+
+</div>
+
+
+<div id="blocklyDiv">
+
+</div>
+
+<div id="buttonBar">
+    <button id="startGame" onclick="spillet.testCode()">Test koden!</button>
+    <button id="resetGame" class="hidden" onclick="spillet.resetPlayer()">Nullstill spillet</button>
+</div>
+
+<div id="description">
+    <p>I denne oppgaven skal du bevege spilleren fra det grønne feltet til det lilla feltet med kodeklosser.</p><p>Husk å starte med <span style="font-weight: 900;">Når runden starter</span>-klossen.</p>
+</div>
+
+<div id="configArea">
+    <textarea id="configInput">
+        this.startX = 3;
+        this.startY = 5;
+        this.endX = 6;
+        this.endY = 4;
+        this.winText = "JIPPI! DU KLARTE DET!";
+        this.stones = [ [0, 2], [5, 5] ];
+
+        this.blocks = {
+            "round_start": 1,
+            "walk_forwards": 4,
+            "rotate": 4
+        };
+    </textarea>
+</div>
+
+<button id="configAreaButton" onclick="spillet.updateGame()">Oppdater</button>
+
+<script src="js/p5.play.js"></script>
+<script src="js/spiller.js"></script>
+<script src="js/sketch.js"></script>
+<script src="js/floor.js"></script>
+<script src="js/tower.js"></script>
+
+<script src="js/toolbox.js"></script>
+
+<script>
+    var kikoraToolbox;
+    var workspace;
+</script>
+
 </body>
 </html>

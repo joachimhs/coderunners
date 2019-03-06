@@ -1,377 +1,304 @@
-var columns = 20,
-    rows    = 11;
+let P5Game = function() {
+    this.columns = 10;
+    this.rows    = 10;
 
-var tileWidth = 50;
-var tileHeight = tileWidth;
+    this.tileWidth = 50;
+    this.tileHeight = this.tileWidth;
 
-var gameWidth = columns * tileWidth;
-var gameHeight = rows * tileHeight;
+    this.startX = 0;
+    this.startY = 0;
+    this.endX = 0;
+    this.endY = 0;
+    this.winText = "Du Klarte Oppgaven!";
 
-var towers = [];
-var runners = [];
-var tiles = [];
+    this.pauseFrames = 0;
 
-var availableTowers = 3; //The number of towers that can be currently placed
-var placeTower = false; //true = in place tower-mode
-var running = false; //true = round is running
+    this.tiles = [];
+    this.stones = [];
 
-var numRunnersThisRound = 3;
-var roundNum = 1;
+    this.gameWidth = this.columns * this.tileWidth;
+    this.gameHeight = this.rows * this.tileHeight;
 
-function setup() {
-    createCanvas(gameWidth+200, gameHeight);
-    angleMode(DEGREES);
-}
+    this.purpleColor = kikoraP5.color(106, 76, 181);
+    this.greenColor = kikoraP5.color(140, 217, 92);
+    this.blueColor = kikoraP5.color(24, 44, 79);
 
-function draw() {
-    clear();
+    this.spiller = new Spiller(this.startX, this.startY);
 
-    background(255);
+    this.wizardImg = kikoraP5.loadImage('/sprites/wizard_ice/3_RUN_001.png');
+    this.stoneImg = kikoraP5.loadImage('/sprites/stone/stones_10.png');
 
-    calculatePath();
-    drawGrid();
-    //drawGameBorder();
-    drawAvailableTowers();
-    drawStartButton();
+    this.timeoutIds = [];
 
-    drawTowers();
-    drawRunners();
+    /** Accessors and Mutators **/
+    this.getPurpleColor = function() {
+        return this.purpleColor;
+    };
 
-    fill(0);
-    textSize(24);
-    text('' + availableTowers, gameWidth + 90, 105);
-}
+    this.getBlueColor = function() {
+        return this.blueColor;
+    };
 
-function calculatePath() {
-    tiles = [];
-    for (var y = 0; y < rows; y++) {
-        for (var x = 0; x < columns; x++) {
-            var floor = new Floor(x, y);
-            floor.setAvailable();
-            floor.setWalkable(!isAnyTowerAt(x, y));
+    this.getGreenColor = function() {
+        return this.greenColor;
+    };
 
-            tiles.push(floor);
-        }
-    }
+    this.getGameWidth = function() {
+        return this.gameWidth;
+    };
 
+    this.getGameHeight = function() {
+        return this.gameHeight;
+    };
 
-    var goalX = 19;
-    var goalY = 5;
+    this.getTileWidth = function() {
+        return this.tileWidth;
+    };
 
-    var floor = findTileAt(goalX, goalY);
-    floor.setPath();
-    floor.setVisited(true);
-    floor.setDistance(0);
+    this.getTileHeight = function() {
+        return this.tileHeight;
+    };
 
-    //push target to frontier
-    var frontier = [];
-    frontier.push(floor);
+    this.getSpiller = function() {
+        return this.spiller;
+    };
 
+    this.getWizardImg = function() {
+        return this.wizardImg;
+    };
 
+    /** //Accessors and Mutators **/
 
-    // Fill cameFrom and distance for every tile
-    while (frontier.length !== 0) {
-        var current = frontier.shift();
-        var neighbours = getNeighbours(current.getTileX(), current.getTileY());
+    this.getNeighbours = function(tileX, tileY) {
+        var neighbours = [];
 
-        for (var i = 0; i < neighbours.length; i++) {
-            var next = neighbours[i];
-
-            if (!next.getVisited()) {
-                frontier.push(next);
-                next.setDistance(current.getDistance() + 1);
-                next.setVisited(true);
-            }
-        }
-    }
-
-    //Draw runner path
-    var startX = 0;
-    var startY = 5;
-
-    floor = findTileAt(startX, startY);
-    floor.setPath();
-
-    var steps = 1500;
-
-    while (floor.getDistance() > 0) {
-        if (steps === 0) {
-            break;
+        if (tileX > 0 && !isAnyTowerAt(tileX-1, tileY)) {
+            neighbours.push(findTileAt(tileX-1, tileY));
         }
 
-        var eastD = distanceTo(floor.getTileX() + 1, floor.getTileY());
-        var northD = distanceTo(floor.getTileX(), floor.getTileY() - 1);
-        var southD = distanceTo(floor.getTileX(), floor.getTileY() + 1);
-        var westD = distanceTo(floor.getTileX() - 1, floor.getTileY());
-
-        var east = findTileAt(floor.getTileX() + 1, floor.getTileY());
-        var north = findTileAt(floor.getTileX(), floor.getTileY() - 1);
-        var south = findTileAt(floor.getTileX(), floor.getTileY() + 1);
-        var west = findTileAt(floor.getTileX() - 1, floor.getTileY());
-
-        if (west && westD <= southD && westD <= eastD && westD <= northD) {
-            west.setPath();
-            floor = west;
-        } else if (eastD <= northD && eastD <= southD && eastD <= westD) {
-            east.setPath();
-            floor = east;
-        } else if (northD <= eastD && northD <= southD ) {
-            north.setPath();
-            floor = north;
-        } else if (southD <= northD && southD <= eastD) {
-            south.setPath();
-            floor = south;
+        if (tileX < columns-1 && !isAnyTowerAt(tileX+1, tileY)) {
+            neighbours.push(findTileAt(tileX+1, tileY));
         }
 
-        steps--;
-    }
-}
-
-function getNeighbours(tileX, tileY) {
-    var neighbours = [];
-
-    if (tileX > 0 && !isAnyTowerAt(tileX-1, tileY)) {
-        neighbours.push(findTileAt(tileX-1, tileY));
-    }
-
-    if (tileX < columns-1 && !isAnyTowerAt(tileX+1, tileY)) {
-        neighbours.push(findTileAt(tileX+1, tileY));
-    }
-
-    if (tileY > 0 && !isAnyTowerAt(tileX, tileY-1)) {
-        neighbours.push(findTileAt(tileX, tileY-1));
-    }
-
-    if (tileY < rows-1 && !isAnyTowerAt(tileX, tileY+1)) {
-        neighbours.push(findTileAt(tileX, tileY+1));
-    }
-
-    return neighbours;
-
-}
-
-function getNumVisited() {
-    var numVisited = 0;
-    for (var t = 0; t < tiles.length; t++) {
-        if (tiles[t].getVisited()) {
-            numVisited++;
+        if (tileY > 0 && !isAnyTowerAt(tileX, tileY-1)) {
+            neighbours.push(findTileAt(tileX, tileY-1));
         }
-    }
 
-    return numVisited;
-}
+        if (tileY < rows-1 && !isAnyTowerAt(tileX, tileY+1)) {
+            neighbours.push(findTileAt(tileX, tileY+1));
+        }
 
-function distanceTo(tileX, tileY) {
-    var tile = findTileAt(tileX, tileY);
-    if (tile) {
-        return tile.getDistance();
-    } else {
-        return 10000;
-    }
-}
+        return neighbours;
 
-function findTileAt(tileX, tileY) {
-    if (tileX < 0 || tileX > columns) {
-        return undefined;
-    }
+    };
 
-    if (tileY < 0 || tileY > rows) {
-        return undefined;
-    }
+    this.findTileAt = function(tileX, tileY) {
+        if (tileX < 0 || tileX > columns) {
+            return undefined;
+        }
 
-    var tileNum = tileX + (columns*tileY);
-    return tiles[tileNum];
+        if (tileY < 0 || tileY > rows) {
+            return undefined;
+        }
 
-}
+        var tileNum = tileX + (columns*tileY);
+        return this.tiles[tileNum];
 
-function drawGrid() {
-    for (var t = 0; t < tiles.length; t++) {
-        tiles[t].draw();
-    }
-    /*for (var tileW = 1; tileW <= columns; tileW++) {
-        stroke(255, 255, 255);
-        line(tileW*tileWidth, 0, (tileW*tileWidth), gameHeight)
-    }
+    };
 
-    for (var tileH = 1; tileH < rows; tileH++) {
-        stroke(255, 255, 255);
-        line(0, tileH*tileHeight, gameWidth, tileH*tileHeight)
-    }*/
-}
+    this.setup = function() {
+        this.tiles = [];
 
-function drawAvailableTowers() {
-    fill(255);
-    stroke(0);
-    ellipse(gameWidth + 100, 100, (tileWidth*2), (tileHeight*2));
-}
-
-function drawGameBorder() {
-    stroke(255, 90, 44);
-    strokeWeight(15);
-    fill(255, 255, 255, 0);
-    rect(0, 0, gameWidth, gameHeight);
-
-    strokeWeight(1);
-}
-
-function drawStartButton() {
-    fill(255);
-    stroke(0);
-    rect(gameWidth + 50, gameHeight - 100, (tileWidth*2), (tileHeight));
-
-    fill(0);
-    textSize(24);
-    text('Start', gameWidth + 75, gameHeight - 65);
-
-    fill(0);
-    textSize(24);
-    text('Round ' + roundNum, gameWidth + 55, gameHeight - 15);
-}
-
-function drawTowers() {
-    if (findTileAt(0,5).getDistance() === 10000) {
-        towers.pop();
-        availableTowers++;
-    }
-
-    for (var t = 0; t < towers.length; t++) {
-        towers[t].draw();
-
-        var hasHit = false;
-        for (var r = 0; r < runners.length; r++) {
-            if (!hasHit && towers[t].canHit(runners[r])) {
-                runners[r].hit(1);
-                hasHit = true;
+        for (var y = 0; y < this.rows; y++) {
+            for (var x = 0; x < this.columns; x++) {
+                var floor = new Floor(x, y);
+                this.tiles.push(floor);
             }
         }
 
-    }
-}
+        this.updateFloor();
+    };
 
-function drawRunners() {
-    if (running) {
-        playRound();
+    this.draw = function() {
+        kikoraP5.clear();
+        kikoraP5.background(255);
 
-        if (runnerReachedGoal()) {
-            console.log("Game Lost!");
-            runners = [];
-            numRunnersThisRound = 3;
-            running = false;
+        this.drawGrid();
+        //this.drawStartButton();
+        this.spiller.draw();
+    };
+
+    this.addPauseFrames = function(frames) {
+        this.pauseFrames + frames;
+    };
+
+    this.setTileVisited = function(tileX, tileY) {
+
+    };
+
+    this.playerCanMoveTo = function(x, y) {
+        return this.tiles[this.getIndexFromXY(x, y)].playerCanBeAtTile();
+    };
+
+    this.resetPlayer = function() {
+        document.getElementById("startGame").classList.remove('hidden');
+        document.getElementById("resetGame").classList.add('hidden');
+
+        for (let index = 0; index < this.timeoutIds.length; index++) {
+            clearTimeout(this.timeoutIds[index]);
         }
 
-        if (allRunnersDead()) {
-            console.log("Round WON!");
-            running = false;
-            numRunnersThisRound += 3;
-            roundNum++;
-            availableTowers += 1;
-        }
-    }
-}
+        this.updateFloor();
+        this.spiller.resetPlayerTo(this.startX, this.startY);
+    };
 
-function runnerReachedGoal() {
+    this.updateGame = function() {
+        console.log('updateGame()');
 
-    for (var r = 0; r < runners.length; r++) {
-        var tile = findTileAt(runners[r].getTileX(), runners[r].getTileY());
-        if (tile.getDistance() === 0) {
-            return true;
-        }
-    }
+        var kode = document.getElementById('configInput').value;
 
-    return false;
-}
+        eval(kode);
 
-function allRunnersDead() {
-    return running && runners.length == 0;
-}
+        this.updateFloor();
+        this.spiller.resetPlayerTo(this.startX, this.startY);
 
-function startRound() {
-    setTimeout(function() {
-        running = true;
-    }, 100);
+        kikoraToolbox.setBlocks(this.blocks);
 
-    for (var r = 0; r < numRunnersThisRound; r++) {
-        setTimeout(function() {
-            runners.push(new Runner(40 + (roundNum * 10)));
-        }, 350 * r);
-    }
+        //Disposing the old workspace, and creating a new one with updated XML
+        workspace.dispose();
+        workspace = Blockly.inject('blocklyDiv', {toolbox: kikoraToolbox.generateToolbox(), maxInstances: kikoraToolbox.generateMaxInstances()})
+        workspace.options.maxInstances = kikoraToolbox.generateMaxInstances();
+    };
 
-
-}
-
-function playRound() {
-    for (var r = 0; r < runners.length; r++) {
-        runners[r].update();
-        runners[r].draw();
-
-        if (runners[r].isDead()) {
-            console.log("DELETING");
-            runners.splice(r, 1);
-        }
-    }
-}
-
-function getTileX(xPos) {
-    return parseInt(xPos/tileWidth);
-}
-
-function getTileY(yPos) {
-    return parseInt(yPos/tileHeight);
-}
-
-function isAnyTowerAtTile(tile) {
-    return isAnyTowerAt(tile.getTileX(), tile.getTileY());
-}
-
-function isAnyTowerAt(tileX, tileY) {
-    var towerAlreadyPlaced = false;
-    for (var t = 0; t < towers.length; t++) {
-        if (towers[t].isAt(tileX, tileY)) {
-            towerAlreadyPlaced = true;
-        }
-    }
-
-    return towerAlreadyPlaced;
-}
-
-function doMouseClickOrTouch() {
-    var tileX = getTileX(mouseX);
-    var tileY = getTileY(mouseY);
-
-    if (placeTower && tileX < columns && tileY < rows) {
-        if (!isAnyTowerAt(tileX, tileY)) {
-            console.log("placing tower!");
-            towers.push(new Tower(tileX, tileY));
-            availableTowers--;
-        } else {
-            console.log("Tile already have a tower!");
+    this.updateFloor = function() {
+        for (let index = 0; index < this.tiles.length; index++) {
+            this.tiles[index].resetTile();
         }
 
-        placeTower = false;
+        if (this.tiles.length > 0) {
+            this.tiles[this.getIndexFromXY(this.startX, this.startY)].setVisited();
+            this.tiles[this.getIndexFromXY(this.endX, this.endY)].setGoal();
+
+            for (let index = 0; index < this.stones.length; index++) {
+                let stone = this.stones[index];
+
+                let tile = this.getIndexFromXY(stone[0], stone[1]);
+                this.tiles[tile].setTileSprite(this.stoneImg);
+            }
+        }
+    };
+
+    this.getIndexFromXY = function(x, y) {
+        return x + (this.columns * y);
+    };
+
+    this.testCode = function() {
+        document.getElementById("startGame").classList.add('hidden');
+        document.getElementById("resetGame").classList.remove('hidden');
+
+        workspace.highlightBlock(null);
+
+        let delay = -2000;
+
+        var self = this;
+        //find round_start block and execute
+        workspace.getTopBlocks().forEach(function(currBlock) {
+            if (currBlock.type === 'round_start') {
+                var startRoundCode = Blockly.JavaScript.blockToCode(currBlock).split(";");
+
+                for (let index = 0; index < startRoundCode.length; index++) {
+                    var timeoutId = setTimeout(function() {
+                        eval(startRoundCode[index] + ";");
+                    }, delay+=1500);
+
+                    self.timeoutIds.push(timeoutId);
+
+                    timeoutId = setTimeout(function() {
+                        spillet.testWinCondition();
+                    },delay + 150);
+
+                    self.timeoutIds.push(timeoutId);
+                }
+            }
+        });
+    };
+
+    this.testWinCondition = function() {
+        var self = this;
+        if (this.spiller.getTileX() === this.endX && this.spiller.getTileY() === this.endY) {
+            alert(self.winText);
+
+            setTimeout(function() {
+                self.resetPlayer();
+            }, 1000);
+        }
+    };
+
+    this.drawGrid = function() {
+        for (var t = 0; t < this.tiles.length; t++) {
+            this.tiles[t].draw();
+        }
+    };
+
+    this.drawGameBorder = function() {
+        kikoraP5.stroke(255, 90, 44);
+        kikoraP5.strokeWeight(15);
+        kikoraP5.fill(255, 255, 255, 0);
+        kikoraP5.rect(0, 0, gameWidth, gameHeight);
+
+        kikoraP5.strokeWeight(1);
+    };
+
+    this.drawStartButton = function() {
+        kikoraP5.fill(255);
+        kikoraP5.stroke(0);
+        kikoraP5.rect(this.gameWidth + 50, this.gameHeight - 100, (this.tileWidth*2), (this.tileHeight));
+
+        kikoraP5.fill(0);
+        kikoraP5.textSize(24);
+        kikoraP5.text('Start', this.gameWidth + 75, this.gameHeight - 65);
+    };
+
+    this.roundStart = function() {
+
+
+    };
+
+    this.getTileX = function(xPos) {
+        return parseInt(xPos/tileWidth);
+    };
+
+    this.getTileY = function(yPos) {
+        return parseInt(yPos/tileHeight);
+    };
+
+    this.getTileAt = function(tileX, tileY) {
+        var tileNum = tileX + (tileY*this.columns);
+        return this.tiles[tileNum];
     }
+};
 
-    console.log("mouse clicked! mouseX: " + mouseX + " mouseY: " + mouseY + " tileX: " + tileX + " tileY: " + tileY);
+let kikoraKodespill = function( sketch) {
 
-    //Must do after placing tower
-    if (mouseX > gameWidth + 50 && mouseX < gameWidth+200
-        && mouseY > 50 && mouseY < 150) {
-        placeTower = availableTowers > 0;
-        console.log("Tower can be placed: " + placeTower);
-    }
+    sketch.setup = function() {
+        this.createCanvas(spillet.getGameWidth()+200, spillet.getGameHeight());
+        sketch.angleMode(sketch.DEGREES);
 
-    if (mouseX > gameWidth + 50 && mouseX < gameWidth+200
-        && mouseY > gameHeight - 100 && mouseY < gameHeight
-        && !running) {
+        spillet.setup();
+    };
 
-        console.log("starting round");
-        startRound();
-    }
-}
+    sketch.draw = function() {
+        sketch.clear();
 
-function touchEnded() {
-    console.log('touchEnded');
-    doMouseClickOrTouch()
-}
+        sketch.background(255);
+
+        spillet.draw();
+    };
+};
+
+var kikoraP5 = new p5(kikoraKodespill);
+let spillet = new P5Game();
+
 
 /*function mouseClicked() {
     console.log('mouseClicked');
@@ -387,3 +314,44 @@ function arrayRemove(arr, value) {
     });
 
 }
+
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
+}
+
+/**
+ * The function below is a callback function that executes when the document is ready,
+ * all scripts are loaded and elements are placed on-screen. This is a MVP implementation
+ * of the jQuery.ready() callback function.
+ *
+ * @param callback
+ */
+function documentReady(callback){
+    // in case the document is already rendered
+    if (document.readyState!='loading') callback();
+    // modern browsers
+    else if (document.addEventListener) document.addEventListener('DOMContentLoaded', callback);
+    // IE <= 8
+    else document.attachEvent('onreadystatechange', function(){
+            if (document.readyState=='complete') callback();
+        });
+}
+
+/**
+ * When the document is ready, ensure that the game is updated according to the input parameters.
+ */
+
+documentReady(function(){
+    setTimeout(function() {
+        kikoraToolbox = new KikoraToolbox();
+
+        workspace = Blockly.inject('blocklyDiv', {toolbox: kikoraToolbox.generateToolbox(), maxInstances: kikoraToolbox.generateMaxInstances()});
+
+        spillet.updateGame();
+    }, 100);
+
+});

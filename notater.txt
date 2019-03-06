@@ -1,0 +1,29 @@
+Kodeklosser for spillet: 
+
+Startklosser: 
+
+- Når runden er vunnet
+- Når runden starter
+
+Klosser: 
+
+- Plasser tårn på X og Y
+- 
+
+
+Kodeklosser for tårn: 
+
+Startklosser
+
+- Når runden starter
+- Når runden er vunnet
+
+Klosser: 
+
+- Gi x% ekstra skade
+- Splash skade i 0,5 ruter
+- Splash skade i 1 rute
+- Splash skade i 1,1 ruter
+- Splash skade i 1,2 ruter
+- Splash skade i 1,3 ruter
+- Forsink løper med x% i X sekund
